@@ -91,5 +91,3 @@ ENV/
 requirements.in
 mypythonfile.py
 .Rproj.user
-*.Rproj
-
