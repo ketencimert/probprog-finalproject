@@ -91,3 +91,5 @@ ENV/
 requirements.in
 mypythonfile.py
 .Rproj.user
+*.Rproj
+.DS_Store
