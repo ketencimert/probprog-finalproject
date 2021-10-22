@@ -32,8 +32,7 @@ parameters {
 
 model {
 
-
-    vector[psize] sigma[gsize+1];
+    matrix[gsize+1, psize] sigma;
 
     omega2 ~ inv_gamma(4, 2);
 
@@ -41,31 +40,22 @@ model {
 
     beta ~ normal(0, 25);
 
-    for (p in 1:psize)
+    gamma[1] ~ normal(0, sqrt(omega2));
 
-        gamma[1][p] ~ normal(0, sqrt(omega2));
-
-    for (p in 1:psize)
-
-        logsigma2[1][p] ~  normal(log(omega2), tau);
-
-    for (g in 1:gsize)
-        for (p in 1:psize)
-
-            logsigma2[g+1][p] ~ normal(logsigma2[g][p], tau);
-
-    for (g in 1:gsize+1)
-        for (p in 1:psize)
-
-            sigma[g][p] = sqrt(exp(logsigma2[g][p]));
-
-    for (g in 1:gsize)
-        for (p in 1:psize)
-
-            gamma[g+1][p] ~ normal(rho * gamma[g][p], sigma[g][p]);
+    logsigma2[1] ~  normal(log(omega2), tau);
 
     for (g in 1:gsize)
 
-        score[g] ~ bernoulli_logit(gamma[g+1][p1id[g]] - gamma[g+1][p2id[g]]+beta);
+        logsigma2[g+1] ~ normal(logsigma2[g], tau);
+
+    sigma = sqrt(exp(logsigma2));
+
+    for (g in 1:gsize)
+
+        gamma[g+1] ~ normal(rho * gamma[g], sigma[g]);
+
+    for (g in 1:gsize)
+
+        score[g] ~ bernoulli_logit(gamma[g+1][p1id[g]] - gamma[g+1][p2id[g]] + beta);
 
 }

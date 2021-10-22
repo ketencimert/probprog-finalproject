@@ -3,11 +3,6 @@
 Created on Wed Oct 27 20:18:20 2021
 
 @author: Mert
-
-Download data from: https://www.kaggle.com/c/ChessRatings2
-
-primary_training_part1.zip
-
 """
 
 import argparse
@@ -24,27 +19,39 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--sample_size', default=100, type=int)
+    
+    parser.add_argument('--periods', default=2, type=int)
 
     args = parser.parse_args()
 
     players_rename = dict()
 
-    data = pd.read_csv('./primary_training_part1.csv')[:args.sample_size] #stan memory issues...
+    data = pd.read_csv('./primary_training_part1.csv')
 
-    match_id = data['PTID'] #mid
-
-    player1_id = data['WhitePlayer'] #p1id
-
-    player2_id = data['BlackPlayer'] #p2id
-
-    white_score = data['WhiteScore'] #score
-
-    game_size = data['PTID'].unique().size #gsize
+    data = data[data['MonthID'] <= args.periods]
+    
+    data = data[data['WhiteScore'] != 0.5]
+    
+    n_game = data.shape[0]
+    
+    n_period = max(
+        pd.concat([
+            data['WhitePlayer'],  data['BlackPlayer']
+            ])
+        )
+    
+    id_period = data['MonthID']
+    
+    id_white = data['WhitePlayer']
+    
+    id_black = data['BlackPlayer']
+    
+    score = data['WhiteScore']
 
     players = pd.Series(np.concatenate(
         [
-         player1_id.values,
-         player2_id.values,
+         id_white.values,
+         id_black.values,
          ]
         )).unique()
 
@@ -56,25 +63,26 @@ if __name__ == '__main__':
 
         i += 1
 
-    player1_id = player1_id.values.tolist()
-    player2_id = player2_id.values.tolist()
+    id_white = id_white.values.tolist()
+    id_black = id_black.values.tolist()
 
-    for i in range(len(player1_id)):
+    for i in range(len(id_white)):
 
-        player1_id[i] = players_rename[player1_id[i]]
+        id_white[i] = players_rename[id_white[i]]
 
-    for i in range(len(player2_id)):
+    for i in range(len(id_black)):
 
-        player2_id[i] = players_rename[player2_id[i]]
+        id_black[i] = players_rename[id_black[i]]
 
     data = {
-        'mid': match_id.values.tolist(),
-        'p1id': player1_id,
-        'p2id': player2_id,
-        'score': (white_score==1.0).astype(int).tolist(), #how to deal with all square
-        'gsize': game_size,
-        'psize': len(players_rename),
+        'n_game': int(n_game),
+        'n_period': int(n_period),
+        'id_period': [int(p) for p in id_period],
+        'id_white': [int(w) for w in id_white],
+        'id_black': [int(b) for b in id_black],
+        'score': [int(s) for s in score],
         }
 
     with open('chess.data.json', 'w') as fp:
+        
         json.dump(data, fp)
