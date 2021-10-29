@@ -20,9 +20,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--sample_size', default=100, type=int)
 
-    parser.add_argument('--min_game', default=6, type=int)
+    parser.add_argument('--min_game', default=10, type=int)
 
-    parser.add_argument('--cut', default=300, type=int)
+    parser.add_argument('--cut', default=400, type=int)
 
     parser.add_argument('--periods', default=20, type=int)
 
