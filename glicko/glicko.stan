@@ -11,7 +11,6 @@ data {
 parameters {
   matrix[n_period + 1, n_player] gamma;
   real<lower=0> sigma_sq[n_period + 1, n_player];
-  real<lower=0> omega_sq;
   real<lower=0> tau_sq;
   real beta;
   real<lower=0, upper=1> rho;
@@ -20,11 +19,11 @@ parameters {
 model {
 
   tau_sq ~ inv_gamma(4, 1.5);
-  beta ~ normal(0, 25);
+  beta ~ normal(0, 5);
 
   sigma_sq[1] ~ inv_gamma(4, 2);
   for (t in 2:(n_period + 1)) {
-    sigma_sq[t] ~ lognormal(log(sigma_sq[t-1]), sqrt(tau_sq));
+    sigma_sq[t] ~ lognormal(log(sigma_sq[t - 1]), sqrt(tau_sq));
   }
 
   gamma[1] ~ normal(0, sqrt(sigma_sq[1]));
@@ -34,7 +33,7 @@ model {
 
   for (g in 1:n_game) {
     score[g] ~ bernoulli_logit(
-      gamma[id_period[g], id_white[g]] - gamma[id_period[g], id_black[g]] + beta
+      gamma[id_period[g] + 1, id_white[g]] - gamma[id_period[g] + 1, id_black[g]] + beta
     );
   }
 
