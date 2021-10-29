@@ -38,3 +38,13 @@ model {
   }
 
 }
+
+generated quantities {
+  real score_pp[n_game];
+
+  for (g in 1:n_game) {
+    score_pp[g] = bernoulli_logit_rng(
+      gamma[id_period[g] + 1, id_white[g]] - gamma[id_period[g] + 1, id_black[g]] + beta
+    );
+  }
+}
