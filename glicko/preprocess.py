@@ -14,6 +14,8 @@ import numpy as np
 
 import json
 
+#ToDo: Combine the periods.
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -25,6 +27,8 @@ if __name__ == '__main__':
     parser.add_argument('--cut', default=400, type=int)
 
     parser.add_argument('--periods', default=20, type=int)
+
+    parser.add_argument('--combine_every', default=12, type=int)
 
     args = parser.parse_args()
 
@@ -102,20 +106,35 @@ if __name__ == '__main__':
 
         id_black[i] = int(players_rename[id_black[i]])
 
+    #do mapping here
     i = 1
-    
+
+    k = 0
+
     for period in id_period.unique():
+
+        if k == args.combine_every:
+
+            k = 0
+
+        if k != 0:
+
+            period_rename[period] = period_rename[period-1]
+
+        else:
+
+            period_rename[period] = i
+
+            i += 1
         
-        period_rename[period] = i
-        
-        i += 1
-        
+        k += 1
+            
     id_period = id_period.values.tolist()
 
     for i in range(len(id_period)):
-        
+
             id_period[i] = int(period_rename[id_period[i]])
-        
+
     data = {
         'n_game': int(n_game),
         'n_period': int(n_period),
