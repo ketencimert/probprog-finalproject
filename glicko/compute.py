@@ -20,7 +20,7 @@ def bayesian_p(score_pp, observed_data, check, dim):
 
     return p_values
 
-def get_samples_vi(df_vi, glicko_vi):
+def get_samples_vi(df_vi, glicko_vi, observed_data):
 
     df_vi.columns = glicko_vi.column_names
 
@@ -118,7 +118,7 @@ def get_synthetic_score(score_pp, observed_data, check, dim='period'):
 
     return sim_dist
 
-def get_samples_map(df_map):
+def get_samples_map(df_map, observed_data):
 
     keys = []
 
