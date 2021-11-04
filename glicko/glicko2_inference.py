@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     ratings_by_time = []
 
-    for period in tqdm(unique_periods, total= len(unique_periods)):
+    for period in tqdm(unique_periods, total=len(unique_periods)):
 
         all_games = chess_data[chess_data['id_period'] == period]
 
@@ -216,7 +216,11 @@ if __name__ == '__main__':
             if len(games) == 0:
 
                  players[player].did_not_compete()
-
+                 
+                 ratings_by_time.append(
+                    (period, player, players[player].rating)
+                    )
+                 
             else:
 
                 score = games['score'].tolist()
@@ -238,6 +242,8 @@ ratings_by_time = pd.DataFrame(ratings_by_time).rename(
     2:'rating'
     }
     )
+
+ratings_by_time['rating'] = (ratings_by_time['rating'] - 1500) / 173.7178
 
 sns.lineplot(x="period", y="rating",
          hue="player",
