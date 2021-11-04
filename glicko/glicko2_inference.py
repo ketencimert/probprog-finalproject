@@ -1,14 +1,55 @@
-
 import argparse
+from collections import defaultdict
 import math
 import json
 
+import numpy as np
+from numpy.random import binomial
 import pandas as pd
 from tqdm import tqdm
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set_theme(style="darkgrid")
+
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
+
+
+def evaluate(ratings_by_time_, chess_data):
+    iteration_loss = []
+
+    for match in chess_data.values:
+
+        period = match[3]
+
+        id_white = match[4]
+
+        id_black = match[5]
+
+        score = match[6]
+
+        try:
+
+            gamma_white = ratings_by_time_[period][id_white]
+
+        except:
+
+            gamma_white = 0
+
+        try:
+
+            gamma_black = ratings_by_time_[period][id_black]
+
+        except:
+
+            gamma_black = 0
+
+        p = sigmoid(gamma_white - gamma_black)
+
+        iteration_loss.append(
+            score * np.log(p) + (1 - score) * np.log(1 - p)
+        )
+
+    return np.mean(iteration_loss)
+
 
 class Player:
     # Class attribute
@@ -32,7 +73,7 @@ class Player:
 
     rd = property(getRd, setRd)
 
-    def __init__(self, rating = 1500, rd = 350, vol = 0.06):
+    def __init__(self, rating=1500, rd=350, vol=0.06):
         # For testing purposes, preload the values
         # assigned to an unrated player.
         self.setRating(rating)
@@ -70,7 +111,7 @@ class Player:
                        (outcome_list[i] - self._E(rating_list[i], RD_list[i]))
         self.__rating += math.pow(self.__rd, 2) * tempSum
 
-    #step 5
+    # step 5
     def _newVol(self, rating_list, RD_list, outcome_list, v):
         """ Calculating the new volatility as per the Glicko2 system.
 
@@ -79,50 +120,50 @@ class Player:
         _newVol(list, list, list, float) -> float
 
         """
-        #step 1
-        a = math.log(self.vol**2)
+        # step 1
+        a = math.log(self.vol ** 2)
         eps = 0.000001
         A = a
 
-        #step 2
+        # step 2
         B = None
         delta = self._delta(rating_list, RD_list, outcome_list, v)
         tau = self._tau
-        if (delta ** 2)  > ((self.__rd**2) + v):
-          B = math.log(delta**2 - self.__rd**2 - v)
+        if (delta ** 2) > ((self.__rd ** 2) + v):
+            B = math.log(delta ** 2 - self.__rd ** 2 - v)
         else:
-          k = 1
-          while self._f(a - k * math.sqrt(tau**2), delta, v, a) < 0:
-            k = k + 1
-          B = a - k * math.sqrt(tau **2)
+            k = 1
+            while self._f(a - k * math.sqrt(tau ** 2), delta, v, a) < 0:
+                k = k + 1
+            B = a - k * math.sqrt(tau ** 2)
 
-        #step 3
+        # step 3
         fA = self._f(A, delta, v, a)
         fB = self._f(B, delta, v, a)
 
-        #step 4
+        # step 4
         while math.fabs(B - A) > eps:
-          #a
-          C = A + ((A - B) * fA)/(fB - fA)
-          fC = self._f(C, delta, v, a)
-          #b
-          if fC * fB < 0:
-            A = B
-            fA = fB
-          else:
-            fA = fA/2.0
-          #c
-          B = C
-          fB = fC
+            # a
+            C = A + ((A - B) * fA) / (fB - fA)
+            fC = self._f(C, delta, v, a)
+            # b
+            if fC * fB < 0:
+                A = B
+                fA = fB
+            else:
+                fA = fA / 2.0
+            # c
+            B = C
+            fB = fC
 
-        #step 5
+        # step 5
         return math.exp(A / 2)
 
     def _f(self, x, delta, v, a):
-      ex = math.exp(x)
-      num1 = ex * (delta**2 - self.__rating**2 - v - ex)
-      denom1 = 2 * ((self.__rating**2 + v + ex)**2)
-      return  (num1 / denom1) - ((x - a) / (self._tau**2))
+        ex = math.exp(x)
+        num1 = ex * (delta ** 2 - self.__rating ** 2 - v - ex)
+        denom1 = 2 * ((self.__rating ** 2 + v + ex) ** 2)
+        return (num1 / denom1) - ((x - a) / (self._tau ** 2))
 
     def _delta(self, rating_list, RD_list, outcome_list, v):
         """ The delta function of the Glicko2 system.
@@ -132,7 +173,9 @@ class Player:
         """
         tempSum = 0
         for i in range(len(rating_list)):
-            tempSum += self._g(RD_list[i]) * (outcome_list[i] - self._E(rating_list[i], RD_list[i]))
+            tempSum += self._g(RD_list[i]) * (
+                    outcome_list[i] - self._E(rating_list[i], RD_list[i])
+            )
         return v * tempSum
 
     def _v(self, rating_list, RD_list):
@@ -182,20 +225,22 @@ if __name__ == '__main__':
 
     chess_data = pd.DataFrame.from_dict(
         json.load(open('./chess.data.json'))
-        )
+    )
 
     unique_periods = chess_data['id_period'].unique()
 
     unique_players = pd.concat([
         chess_data['id_white'],
         chess_data['id_black'],
-        ]).unique()
+    ]).unique()
 
     players = {
-        k:Player() for k in unique_players
-        }
+        k: Player() for k in unique_players
+    }
 
     ratings_by_time = []
+
+    ratings_by_time_ = defaultdict(dict)
 
     for period in tqdm(unique_periods, total=len(unique_periods)):
 
@@ -206,8 +251,8 @@ if __name__ == '__main__':
             white_games = all_games[all_games['id_white'] == player]
 
             black_games = all_games[all_games['id_black'] == player].rename(
-                    columns={"id_white": "id_black",
-                             "id_black": "id_white"})
+                columns={"id_white": "id_black",
+                         "id_black": "id_white"})
 
             black_games['score'] = [not _ for _ in black_games['score']]
 
@@ -215,12 +260,16 @@ if __name__ == '__main__':
 
             if len(games) == 0:
 
-                 players[player].did_not_compete()
-                 
-                 ratings_by_time.append(
-                    (period, player, players[player].rating)
-                    )
-                 
+                players[player].did_not_compete()
+
+                rating = players[player].rating
+
+                ratings_by_time.append(
+                    (period, player, rating)
+                )
+
+                ratings_by_time_[period][player] = (rating - 1500) / 173.7178
+
             else:
 
                 score = games['score'].tolist()
@@ -230,34 +279,72 @@ if __name__ == '__main__':
                 rds = [players[k].rd for k in games['id_black']]
 
                 players[player].update_player(ratings, rds, score)
-                
-                ratings_by_time.append(
-                    (period, player, players[player].rating)
-                    )
 
-ratings_by_time = pd.DataFrame(ratings_by_time).rename(
-    columns={
-    0:'period',
-    1:'player',
-    2:'rating'
-    }
+                rating = players[player].rating
+
+                ratings_by_time.append(
+                    (period, player, rating)
+                )
+
+                ratings_by_time_[period][player] = (rating - 1500) / 173.7178
+
+            # loss.append(evaluate(ratings_by_time_, chess_data))
+
+    ratings_by_time = pd.DataFrame(ratings_by_time).rename(
+        columns={
+            0: 'period',
+            1: 'player',
+            2: 'rating'
+        }
     )
 
-ratings_by_time['rating'] = (ratings_by_time['rating'] - 1500) / 173.7178
+    ratings_by_time['rating'] = (ratings_by_time['rating'] - 1500) / 173.7178
 
-sns.lineplot(x="period", y="rating",
-         hue="player",
-         data=ratings_by_time[ratings_by_time['player'].isin([1,2,3])])
+    # sns.lineplot(x="period", y="rating",
+    #          hue="player",
+    #          data=ratings_by_time[ratings_by_time['player'].isin([1,2,3])])
 
-white_games = chess_data[chess_data['id_white'] == 3]
+    white_games = chess_data[chess_data['id_white'] == 3]
 
-black_games = chess_data[chess_data['id_black'] == 3].rename(
+    black_games = chess_data[chess_data['id_black'] == 3].rename(
         columns={"id_white": "id_black",
                  "id_black": "id_white"})
 
-black_games['score'] = [not _ for _ in black_games['score']]
+    black_games['score'] = [not _ for _ in black_games['score']]
 
-games = pd.concat([white_games, black_games]).groupby('id_period').sum()
+    games = pd.concat([white_games, black_games]).groupby('id_period').sum()
+
+    # ratings_by_time_ = defaultdict(dict)
+
+    # for match in ratings_by_time.values:
+
+    #     period = match[0]
+
+    #     id_player = match[1]
+
+    #     rating = match[2]
+
+    #     ratings_by_time_[period][id_player] = rating
+
+    samples = []
+
+    for match in chess_data.values:
+        period = match[3]
+
+        id_white = match[4]
+
+        id_black = match[5]
+
+        gamma_white = ratings_by_time_[period][id_white]
+
+        gamma_black = ratings_by_time_[period][id_black]
+
+        samples.append(binomial(n=1,
+                                p=sigmoid(gamma_white - gamma_black),
+                                size=4000
+                                ))
+
+    samples = np.asarray(samples)
 
 # if __name__ == '__main__':
 
@@ -331,7 +418,6 @@ games = pd.concat([white_games, black_games]).groupby('id_period').sum()
 #             ratings[player] = players[player].rating
 
 #             rds[player] = players[player].rd
-
 
 
 # ratings_by_time = pd.DataFrame(ratings_by_time).rename(
