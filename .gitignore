@@ -90,6 +90,10 @@ ENV/
 
 requirements.in
 mypythonfile.py
-.Rproj.user
+
+# Additional ignores
 .DS_Store
+.json
+.Rproj.user
 *.Rproj
+.Rhistory
