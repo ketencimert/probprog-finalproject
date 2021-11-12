@@ -8,9 +8,10 @@ data {
   int<lower=1> id_black[n_game];                     // black player IDs
   int<lower=0, upper=1> score[n_game];               // game scores
   // testing data for posterior predictions
-  int<lower=1> n_game_pred;                          // # of unique games (test)
-  int<lower=1> id_white_pred[n_game_pred];           // white player IDs (test)
-  int<lower=1> id_black_pred[n_game_pred];           // black player IDs (test)
+  int<lower=1> n_game_test;                          // # of unique games (test)
+  int<lower=1> id_white_test[n_game_test];           // white player IDs (test)
+  int<lower=1> id_black_test[n_game_test];           // black player IDs (test)
+  int<lower=0, upper=1> score_test[n_game_test];     // game scores (test)
 }
 
 parameters {
@@ -23,10 +24,10 @@ parameters {
 
 model {
 
-  tau_sq ~ inv_gamma(4, 1.5);
+  tau_sq ~ inv_gamma(3, 2);
   beta ~ normal(0, 5);
 
-  sigma_sq[1] ~ inv_gamma(4, 2);
+  sigma_sq[1] ~ inv_gamma(5, 3);
   for (t in 2:(n_period + 1)) {
     sigma_sq[t] ~ lognormal(log(sigma_sq[t - 1]), sqrt(tau_sq));
   }
@@ -46,18 +47,20 @@ model {
 
 generated quantities {
 
-  int<lower=0, upper=1> score_rep[n_game];
-  int<lower=0, upper=1> score_pred[n_game_pred];
+  int<lower=0, upper=1> score_ppc[n_game];           // in-sample posterior preds scores
+  real<lower=0, upper=1> score_ppd[n_game_test];     // out-of-sample posterior pred probs
 
+  // in-sample binary predictions (iterative)
   for (g in 1:n_game) {
-    score_rep[g] = bernoulli_logit_rng(
+    score_ppc[g] = bernoulli_logit_rng(
       gamma[id_period[g] + 1, id_white[g]] - gamma[id_period[g] + 1, id_black[g]] + beta
     );
   }
 
-  for (g in 1:n_game_pred) {
-    score_pred[g] = bernoulli_logit_rng(
-      gamma[n_period + 1, id_white_pred[g]] - gamma[n_period + 1, id_black_pred[g]] + beta
+  // out-of-sample probability predictions (based on latest estimtates)
+  for (g in 1:n_game_test) {
+    score_ppd[g] = inv_logit(
+      gamma[n_period + 1, id_white_test[g]] - gamma[n_period + 1, id_black_test[g]] + beta
     );
   }
 
