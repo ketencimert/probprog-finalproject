@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 from glicko.compute import (
     get_empirical_score,
@@ -38,6 +39,25 @@ def plot_ppc(score_pp, observed_data, check, dim):
     plt.show()
 
     return None
+
+
+def plot_trace(samples, gamma_1, gamma_2):
+    draws = np.asarray(samples.posterior['gamma'])[:, :, gamma_1, gamma_2]
+    iteration = list(range(draws.shape[1]))
+    chains = dict()
+
+    plt.figure(figsize=(10, 5))
+
+    for i in range(draws.shape[0]):
+        chains[i] = draws[i, :]
+
+    for key in chains.keys():
+        plt.plot(iteration, chains[key], label='Chain {}'.format(key))
+
+    plt.legend()
+
+    return None
+
 
 def plot_elbo(glicko_vi):
     for fname in glicko_vi.runset._stdout_files:
@@ -80,7 +100,7 @@ def plot_elbo(glicko_vi):
     return None
 
 
-def plot_likelihood(glicko_map):
+def plot_loglikelihood(glicko_map):
     for fname in glicko_map.runset._stdout_files:
         with open(fname, "r") as f:
             text = f.read()
@@ -117,15 +137,11 @@ def plot_likelihood(glicko_map):
         fig.tight_layout()
         plt.title('Convergence of LogLikelihood')
         plt.show()
-    return None
+
+        return None
 
 
-def plot_bce(plot_info):
-
-    iterations = plot_info[0]
-    bce = plot_info[1]
-    deltas = plot_info[2]
-
+def plot_bce(iteration, bce, delta):
     fig, ax1 = plt.subplots()
     fig.set_size_inches(7, 4)
 
@@ -134,15 +150,16 @@ def plot_bce(plot_info):
     ax1.set_xlabel('Iterations')
     ax1.set_ylabel('BCE', color=color)
 
-    ax1.plot(iterations, bce, color=color)
+    ax1.plot(iteration, bce, color=color)
     ax1.tick_params(axis='y', labelcolor=color)
 
     ax2 = ax1.twinx()
     color = 'tab:blue'
     ax2.set_ylabel('Delta', color=color)
-    ax2.plot(iterations, deltas, color=color)
+    ax2.plot(iteration, delta, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
     fig.tight_layout()
     plt.title('Convergence of BCE')
     plt.show()
+
     return None
