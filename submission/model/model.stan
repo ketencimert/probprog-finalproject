@@ -57,7 +57,7 @@ generated quantities {
     );
   }
 
-  // out-of-sample probability predictions (based on latest estimtates)
+  // out-of-sample probability predictions (based on latest parameters)
   for (g in 1:n_game_test) {
     score_ppd[g] = inv_logit(
       gamma[n_period + 1, id_white_test[g]] - gamma[n_period + 1, id_black_test[g]] + beta

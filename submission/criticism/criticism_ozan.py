@@ -87,22 +87,33 @@ def evaluate_models(
         model=model_MLE,
         quantity="score_ppd"
     )
+    y_pred_glicko = model_glicko
     # Compute binary cross entropy loss for each model
     bce_MCMC = get_binary_cross_entropy(y=y, y_pred=y_pred_MCMC)
     bce_VB = get_binary_cross_entropy(y=y, y_pred=y_pred_VB)
     bce_MLE = get_binary_cross_entropy(y=y, y_pred=y_pred_MLE)
+    bce_glicko = get_binary_cross_entropy(y=y, y_pred=y_pred_glicko)
     # Compute missclassification error for each model
     mce_MCMC = get_misclassification_error(y=y, y_pred=y_pred_MCMC)
     mce_VB = get_misclassification_error(y=y, y_pred=y_pred_VB)
     mce_MLE = get_misclassification_error(y=y, y_pred=y_pred_MLE)
+    mce_glicko = get_misclassification_error(y=y, y_pred=y_pred_glicko)
     # Combine results
     df = pd.DataFrame(
         data={
-            " ": ["MCMC (HMC)", "MLE (L-BFGS)", "VB (Meanfield)"],
+            " ":
+            [
+                "MCMC (HMC)",
+                "MLE (L-BFGS)",
+                "VB (Meanfield)",
+                "Glicko2 (Original)"
+            ],
             "binary cross entropy loss $$- \\dfrac{1}{n} \\sum y \times log(y_{pred}) \
-            + (1-y) \times log(1 - y_{pred}) $$": [bce_MCMC, bce_MLE, bce_VB],
+            + (1-y) \times log(1 - y_{pred}) $$":
+            [bce_MCMC, bce_MLE, bce_VB, bce_glicko],
             "misclassification error $$1 - \\dfrac{1}{n} \\sum \text{I}\\{y = y_{pred}\\} \
-            $$": [mce_MCMC, mce_MLE, mce_VB]
+            $$": [mce_MCMC, mce_MLE, mce_VB, mce_glicko]
         }
-    ).round(decimals=3).set_index(" ")
+    ).round(decimals=3).df.set_index(" ")
+    df = df.style.set_caption("$$\\textbf{Testing Performance}$$")
     return(df)
