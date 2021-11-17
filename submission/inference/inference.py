@@ -277,16 +277,16 @@ def map_opt(glicko_stan, observed_data):
     return glicko_map, score_ppc_map
 
 
-def glickman(observed_data):
-    observed_data_ = dict()
+def glickman(observed_data_):
+    observed_data = dict()
 
-    for (key, value) in observed_data.items():
+    for (key, value) in observed_data_.items():
 
         if 'test' not in key:
-            observed_data_[key] = value
+            observed_data[key] = value
 
     observed_data = pd.DataFrame.from_dict(
-        observed_data_
+        observed_data
     )
 
     unique_periods = observed_data['id_period'].unique()
@@ -387,5 +387,18 @@ def glickman(observed_data):
 
     score_ppc_glickman = pp_glickman(observed_data, ratings_by_time_)
 
-    return score_ppc_glickman, ratings_by_time_
+    max_period = max(ratings_by_time_.keys())
 
+    id_white_test = observed_data_['id_white_test']
+    id_black_test = observed_data_['id_black_test']
+
+    probs = []
+
+    for (id_white, id_black) in zip(id_white_test,
+                                    id_black_test):
+        gamma_white = gammas[max_period][id_white]
+        gamma_black = gammas[max_period][id_black]
+
+        probs += [sigmoid(gamma_white - gamma_black)]
+
+    return score_ppc_glickman, probs
