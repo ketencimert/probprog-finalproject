@@ -8,13 +8,25 @@ from utils import (
 )
 
 def plot_ppc(score_ppc, observed_data, check, dim):
+
+    observed_data_ = dict()
+
+    for (key, value) in observed_data.items():
+
+        if 'test' not in key:
+            observed_data_[key] = value
+
+    observed_data = pd.DataFrame.from_dict(
+        observed_data_
+    )
+
     fig_size = 5
 
     fig, axes = plt.subplots(1, len(check))
 
     fig.set_size_inches(len(check) * fig_size, fig_size)
 
-    bins = [33, 28, 20, 20]
+    bins = [33] * len(check)
 
     p_values = bayesian_p(score_ppc, observed_data, check, dim)
 

@@ -1,9 +1,11 @@
+import math
 import numpy as np
 from numpy.random import binomial
 
 import pandas as pd
 
-from inference.glicko2_inference import sigmoid
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
 
 def bayesian_p(score_ppc, observed_data, check, dim):
     p_values = dict()
