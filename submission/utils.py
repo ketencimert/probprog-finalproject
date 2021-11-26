@@ -4,16 +4,40 @@ from numpy.random import binomial
 
 import pandas as pd
 
+
 def sigmoid(x):
+    """
+    Function to compute sigmoid
+    :param x: logit value
+    return: probability
+    """
     return 1 / (1 + math.exp(-x))
 
+
 def bayesian_p(score_ppc, observed_data, check, dim):
+    """
+    Function tocompute Bayesian p-value
+    :param score_ppc: Samples
+    :param observed_data: Real data
+    :param check: PP Check
+    :param dim: Marginalization dim
+    return: Bayesian p-values
+    """
     p_values = dict()
 
     for i in range(len(check)):
-        empirical_score = get_empirical_score(observed_data, check[i].lower(), dim)
+        empirical_score = get_empirical_score(
+            observed_data,
+            check[i].lower(),
+            dim
+            )
 
-        sim_dist = get_synthetic_score(score_ppc, observed_data, check[i].lower(), dim)
+        sim_dist = get_synthetic_score(
+            score_ppc,
+            observed_data,
+            check[i].lower(),
+            dim
+            )
 
         p_value = sim_dist > empirical_score
 
@@ -24,26 +48,14 @@ def bayesian_p(score_ppc, observed_data, check, dim):
     return p_values
 
 
-def get_samples_vi(df_vi, glicko_vi, observed_data):
-    df_vi.columns = glicko_vi.column_names
-
-    keys = []
-
-    for key in df_vi.keys():
-
-        if 'score_ppc' in key:
-            keys.append(key)
-
-    df_vi = df_vi[keys]
-
-    new_names = {k: v for (k, v) in zip(keys, observed_data['id_period'])}
-
-    score_ppc_vi = df_vi.rename(columns=new_names)
-
-    return score_ppc_vi
-
-
 def get_empirical_score(observed_data, check, dim='period'):
+    """
+    Function to compute empirical statistics
+    :param observed_data: Real data
+    :param check: PP Check
+    :param dim: Marginalization dim
+    return: Empirical statistics
+    """
     if dim == 'period':
 
         observed_dataframe = pd.DataFrame.from_dict(observed_data)
@@ -82,6 +94,14 @@ def get_empirical_score(observed_data, check, dim='period'):
 
 
 def get_synthetic_score(score_ppc, observed_data, check, dim='period'):
+    """
+    Function to compute empirical statistics
+    :param score_ppc: Synthetic data
+    :param observed_data: Real data
+    :param check: PP Check
+    :param dim: Marginalization dim
+    return: Synthetic statistics
+    """
     if dim == 'period':
 
         sim_dist = pd.DataFrame(
@@ -123,24 +143,13 @@ def get_synthetic_score(score_ppc, observed_data, check, dim='period'):
     return sim_dist
 
 
-def get_samples_map(df_map, observed_data):
-    keys = []
-
-    for key in df_map.keys():
-
-        if 'score_ppc' in key:
-            keys.append(key)
-
-    df_map = df_map[keys]
-
-    new_names = {k: v for (k, v) in zip(keys, observed_data['id_period'])}
-
-    score_ppc_map = df_map.rename(columns=new_names)
-
-    return score_ppc_map
-
-
 def pp_hmc(samples, observed_data):
+    """
+    Function to generate samples
+    :param samples: MAP inference cmdstanpy dataframe
+    :param observed_data: Real data
+    return: Samples
+    """
     score_ppc_mcmc = np.concatenate(
         [
             samples.posterior[
@@ -163,6 +172,12 @@ def pp_hmc(samples, observed_data):
 
 
 def pp_vi(glicko_vi, observed_data):
+    """
+    Function to generate samples
+    :param glicko_vi: Cmdstanpy VI method
+    :param observed_data: Real data
+    return: Samples
+    """
     df_vi = glicko_vi.variational_sample
 
     df_vi.columns = glicko_vi.column_names
@@ -184,6 +199,12 @@ def pp_vi(glicko_vi, observed_data):
 
 
 def pp_map(glicko_map, observed_data):
+    """
+    Function to generate samples
+    :param glicko_map: Cmdstanpy MAP method
+    :param observed_data: Real data
+    return: Samples
+    """
     df_map = glicko_map.optimized_params_pd
 
     keys = []
@@ -203,6 +224,12 @@ def pp_map(glicko_map, observed_data):
 
 
 def pp_glickman(observed_data, ratings_by_time_):
+    """
+    Function to generate samples
+    :param observed_data: Real data
+    :param ratings_by_time_:  Dictionary - (period, player)
+    return: Samples
+    """
     samples = []
 
     for match in observed_data.values:
