@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 import arviz as az
-import bebi103
 
 import pandas as pd
 import math
@@ -226,14 +225,24 @@ class Player:
         self._preRatingRD()
 
 def hmc(glicko_stan, observed_data, gamma_1=2, gamma_2=2):
-    with bebi103.stan.disable_logging():
-        glicko_mcmc = glicko_stan.sample(
-            data=observed_data,
-            chains=4,
-            iter_sampling=1000,
-            adapt_delta=0.95,
-            seed=123,
-        )
+    """
+    Function to conduct inference
+    :param glicko_stan: Path to Stan model file
+    :param observed_data: Data dictionary to feed into Stan
+    :param gamma_1: Trace plot parameter
+    :param gamma_2: Trace plot parameter
+    :return: Stan model, samples
+    """
+    glicko_mcmc = glicko_stan.sample(
+        data=observed_data,
+        seed=147,
+        chains=4,
+        parallel_chains=4,
+        adapt_delta=0.95,
+        refresh=500,
+        iter_warmup=1000,
+        iter_sampling=1000,
+    )
 
     samples = az.from_cmdstanpy(
         posterior=glicko_mcmc,
@@ -247,13 +256,26 @@ def hmc(glicko_stan, observed_data, gamma_1=2, gamma_2=2):
 
 
 def meanfield_vi(glicko_stan, observed_data):
-    with bebi103.stan.disable_logging():
-        glicko_vi = glicko_stan.variational(
-            data=observed_data,
-            algorithm="meanfield",
-            output_samples=4000,
-            grad_samples=5,
-        )
+    """
+    Function to conduct inference
+    :param glicko_stan: Path to Stan model file
+    :param observed_data: Data dictionary to feed into Stan
+    :return: Stan model, samples
+    """
+    glicko_vi = glicko_stan.variational(
+        data=observed_data,
+        seed=147,
+        refresh=500,
+        algorithm="meanfield",
+        iter=10000,
+        grad_samples=1,
+        elbo_samples=100,
+        adapt_engaged=True,
+        tol_rel_obj=0.003,
+        eval_elbo=100,
+        adapt_iter=50,
+        output_samples=1000
+    )
 
     plot_elbo(glicko_vi)
 
@@ -263,12 +285,26 @@ def meanfield_vi(glicko_stan, observed_data):
 
 
 def map_opt(glicko_stan, observed_data):
-    with bebi103.stan.disable_logging():
-        glicko_map = glicko_stan.optimize(
-            data=observed_data,
-            algorithm="LBFGS",
-            iter=2000,
-        )
+    """
+    Function to conduct inference
+    :param glicko_stan: Path to Stan model file
+    :param observed_data: Data dictionary to feed into Stan
+    :return: Stan model, samples
+    """
+    glicko_map = glicko_stan.optimize(
+        data=observed_data,
+        seed=147,
+        refresh=100,
+        algorithm="lbfgs",
+        init_alpha=0.001,
+        iter=2000,
+        tol_obj=1e-12,
+        tol_rel_obj=1e4,
+        tol_grad=1e-8,
+        tol_rel_grad=1e7,
+        tol_param=1e-8,
+        history_size=5
+    )
 
     plot_loglikelihood(glicko_map)
 
@@ -278,6 +314,11 @@ def map_opt(glicko_stan, observed_data):
 
 
 def glickman(observed_data_):
+    """
+    Function to conduct inference
+    :param observed_data_: Data dictionary to feed into Stan
+    :return: Samples, test probabilities
+    """
     observed_data = dict()
 
     for (key, value) in observed_data_.items():
@@ -351,7 +392,7 @@ def glickman(observed_data_):
 
                     ratings_by_time_[period][player] = (rating - 1500) / 173.7178
 
-                bce.append(evaluate(ratings_by_time_, observed_data))
+                bce.append(-evaluate(ratings_by_time_, observed_data))
 
     bce.pop(0)
 
