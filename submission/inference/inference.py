@@ -21,37 +21,30 @@ from utils import (
     sigmoid
 )
 
+
 def evaluate(ratings_by_time_, chess_data):
+
     iteration_loss = []
-
     for match in chess_data.values:
-
         period = match[3]
-
         id_white = match[4]
-
         id_black = match[5]
-
         score = match[6]
 
-        try:
+        gamma_white = 0
+        gamma_black = 0
 
-            gamma_white = ratings_by_time_[period][id_white]
+        if period in ratings_by_time_.keys():
 
-        except:
+            if id_white in ratings_by_time_[period].keys():
 
-            gamma_white = 0
+                gamma_white = ratings_by_time_[period][id_white]
 
-        try:
+            if id_black in ratings_by_time_[period].keys():
 
-            gamma_black = ratings_by_time_[period][id_black]
-
-        except:
-
-            gamma_black = 0
+                gamma_black = ratings_by_time_[period][id_black]
 
         p = sigmoid(gamma_white - gamma_black)
-
         iteration_loss.append(
             score * np.log(p) + (1 - score) * np.log(1 - p)
         )
@@ -60,9 +53,9 @@ def evaluate(ratings_by_time_, chess_data):
 
 
 class Player:
-    # Class attribute
-    # The system constant, which constrains
-    # the change in volatility over time.
+    """
+    Credits: https://github.com/deepy/glicko2
+    """
     _tau = 0.5
 
     def getRating(self):
@@ -204,8 +197,8 @@ class Player:
         _E(int) -> float
 
         """
-        return 1 / (1 + math.exp(-1 * self._g(p2RD) * \
-                                 (self.__rating - p2rating)))
+        return 1 / (1 + math.exp(-1 * self._g(p2RD) * (
+            self.__rating - p2rating)))
 
     def _g(self, RD):
         """ The Glicko2 g(RD) function.
@@ -223,6 +216,7 @@ class Player:
 
         """
         self._preRatingRD()
+
 
 def hmc(glicko_stan, observed_data, gamma_1=2, gamma_2=2):
     """
@@ -305,9 +299,7 @@ def map_opt(glicko_stan, observed_data):
         tol_param=1e-8,
         history_size=5
     )
-
     plot_loglikelihood(glicko_map)
-
     score_ppc_map = pp_map(glicko_map, observed_data)
 
     return glicko_map, score_ppc_map
@@ -354,7 +346,8 @@ def glickman(observed_data_):
 
                 white_games = all_games[all_games['id_white'] == player]
 
-                black_games = all_games[all_games['id_black'] == player].rename(
+                black_games = all_games[
+                    all_games['id_black'] == player].rename(
                     columns={"id_white": "id_black",
                              "id_black": "id_white"})
 
@@ -372,7 +365,8 @@ def glickman(observed_data_):
                         (period, player, rating)
                     )
 
-                    ratings_by_time_[period][player] = (rating - 1500) / 173.7178
+                    ratings_by_time_[period][player] =\
+                        (rating - 1500) / 173.7178
 
                 else:
 
@@ -390,7 +384,8 @@ def glickman(observed_data_):
                         (period, player, rating)
                     )
 
-                    ratings_by_time_[period][player] = (rating - 1500) / 173.7178
+                    ratings_by_time_[period][player] =\
+                        (rating - 1500) / 173.7178
 
                 bce.append(-evaluate(ratings_by_time_, observed_data))
 
@@ -437,8 +432,8 @@ def glickman(observed_data_):
 
     for (id_white, id_black) in zip(id_white_test,
                                     id_black_test):
-        gamma_white = gammas[max_period][id_white]
-        gamma_black = gammas[max_period][id_black]
+        gamma_white = ratings_by_time_[max_period][id_white]
+        gamma_black = ratings_by_time_[max_period][id_black]
 
         probs += [sigmoid(gamma_white - gamma_black)]
 

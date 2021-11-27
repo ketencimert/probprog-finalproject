@@ -3,13 +3,13 @@ import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from utils import (
     get_empirical_score,
     get_synthetic_score,
     bayesian_p
 )
+
 
 def get_posterior_predictions(model, quantity):
     """
@@ -36,7 +36,8 @@ def get_posterior_predictions(model, quantity):
         ].mean(axis=0)
     else:
         raise TypeError("CmdStan model must be MCMC, VB, or MLE")
-    return(y_pred)
+    return y_pred
+
 
 def get_binary_cross_entropy(y, y_pred, eta=0.01):
     """
@@ -52,7 +53,7 @@ def get_binary_cross_entropy(y, y_pred, eta=0.01):
     binomial_deviance = - np.mean(
         y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred)
     )
-    return(binomial_deviance)
+    return binomial_deviance
 
 
 def get_misclassification_error(y, y_pred):
@@ -66,7 +67,7 @@ def get_misclassification_error(y, y_pred):
     y_pred = np.array(y_pred)
     y_pred = np.where(y_pred >= 0.5, 1, 0)
     misclassification_error = np.mean(y != y_pred)
-    return(misclassification_error)
+    return misclassification_error
 
 
 def evaluate_models(
@@ -123,11 +124,18 @@ def evaluate_models(
         }
     ).round(decimals=3).df.set_index(" ")
     df = df.style.set_caption("$$\\textbf{Testing Performance}$$")
-    return(df)
+    return df
 
 
 def plot_ppc(score_ppc, observed_data, check, dim):
-
+    """
+    Function to plot and Bayesian p-values
+    :param score_ppc: Synthetic scores
+    :param observed_data: True data
+    :param check: PP-Checks to apply
+    :param dim: Marginalization dim (period or player)
+    returns None
+    """
     observed_data_ = dict()
 
     for (key, value) in observed_data.items():
@@ -150,11 +158,17 @@ def plot_ppc(score_ppc, observed_data, check, dim):
     p_values = bayesian_p(score_ppc, observed_data, check, dim)
 
     for i in range(len(check)):
-        main_title = 'T = {} (p-value : {:.2f})'.format(check[i], p_values[check[i]])
+        main_title = 'T = {} (p-value : {:.2f})'.format(
+            check[i], p_values[check[i]]
+            )
 
-        empirical_score = get_empirical_score(observed_data, check[i].lower(), dim)
+        empirical_score = get_empirical_score(
+            observed_data, check[i].lower(), dim
+            )
 
-        sim_dist = get_synthetic_score(score_ppc, observed_data, check[i].lower(), dim)
+        sim_dist = get_synthetic_score(
+            score_ppc, observed_data, check[i].lower(), dim
+            )
 
         axes[i].hist(sim_dist, bins=bins[i])
 
@@ -172,6 +186,13 @@ def plot_ppc(score_ppc, observed_data, check, dim):
 
 
 def plot_trace(samples, gamma_1, gamma_2):
+    """
+    Function to plot trace figures
+    :param samples: Latent r.v. samples
+    :param gamma_1: Period index
+    :param gamma_2: Player index
+    returns None
+    """
     draws = np.asarray(samples.posterior['gamma'])[:, :, gamma_1, gamma_2]
     iteration = list(range(draws.shape[1]))
     chains = dict()
@@ -190,6 +211,11 @@ def plot_trace(samples, gamma_1, gamma_2):
 
 
 def plot_elbo(glicko_vi):
+    """
+    Function to plot elbo figure
+    :param glicko_vi: Trained model
+    returns None
+    """
     for fname in glicko_vi.runset._stdout_files:
         with open(fname, "r") as f:
             text = f.read()
@@ -231,11 +257,18 @@ def plot_elbo(glicko_vi):
 
 
 def plot_loglikelihood(glicko_map):
+    """
+    Function to plot ll figure
+    :param glicko_map: Trained model
+    returns None
+    """
     for fname in glicko_map.runset._stdout_files:
         with open(fname, "r") as f:
             text = f.read()
 
-        split = 'Iter      log prob        ||dx||      ||grad||       alpha      alpha0  # evals  Notes '
+        split = '\
+            Iter      log prob        \
+                ||dx||      ||grad||       alpha      alpha0  # evals  Notes '
         len_splitted = len(text.split(split))
         splitted = text.split(split)
         iterations = []
@@ -272,6 +305,12 @@ def plot_loglikelihood(glicko_map):
 
 
 def plot_bce(iteration, bce, delta):
+    """
+    Function to plot bce figure
+    :param iteration: Iteration num
+    :param bce: BCE val
+    :param delta: Delta val
+    """
     fig, ax1 = plt.subplots()
     fig.set_size_inches(7, 4)
 
