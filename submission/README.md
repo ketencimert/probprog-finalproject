@@ -2,8 +2,6 @@
 
 The goal of this project is to reproduce the Glicko 2 rating system using Stan. We plan to fit the model described in the original paper (Glickman, 2001) using different inference algorithms and different priors.
 
-Glicko 2 considers the setting where there are various players with different merits/strength. The merits/strength of each player is latent. The aim of the model is to undercover this latent structure. That is, in Bayesian terms, making posterior inference over player merits/strength. This is particularly useful in settings where it is essential to evaluate the performance of the players.
-
 ## References
 
 This is the final project by [Ozan Adiguzel](https://github.com/Ozan147) and [Mert Ketenci](https://github.com/ketencimert) for [Machine Learning with Probabilistic Programming](http://www.proditus.com/mlpp2021) (Fall 2021) at Columbia University.

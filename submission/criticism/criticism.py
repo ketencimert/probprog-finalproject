@@ -1,14 +1,8 @@
 from cmdstanpy.stanfit import CmdStanMCMC, CmdStanVB, CmdStanMLE
+from utils import get_empirical_score, get_synthetic_score, bayesian_p
 import pandas as pd
 import numpy as np
-
 import matplotlib.pyplot as plt
-
-from utils import (
-    get_empirical_score,
-    get_synthetic_score,
-    bayesian_p
-)
 
 
 def get_posterior_predictions(model, quantity):
@@ -112,15 +106,15 @@ def evaluate_models(
             " ":
             [
                 "MCMC (HMC)",
-                "MLE (L-BFGS)",
+                "MAP (L-BFGS)",
                 "VB (Meanfield)",
                 "Glicko2 (Original)"
             ],
-            "binary cross entropy loss $$- \\dfrac{1}{n} \\sum y \\times log(y_{pred}) \
-            + (1-y) \times log(1 - y_{pred}) $$":
+            "binary cross entropy loss $$- \\dfrac{1}{n} \\sum y \\times \
+            log(y_{pred}) + (1-y) \\times log(1 - y_{pred}) $$":
             [bce_MCMC, bce_MLE, bce_VB, bce_glicko],
-            "misclassification error $$1 - \\dfrac{1}{n} \\sum \\text{I}\\{y = y_{pred}\\} \
-            $$": [mce_MCMC, mce_MLE, mce_VB, mce_glicko]
+            "misclassification error $$1 - \\dfrac{1}{n} \\sum \\text{I} \
+            \\{y = y_{pred}\\} $$": [mce_MCMC, mce_MLE, mce_VB, mce_glicko]
         }
     ).round(decimals=3).set_index(" ")
     df = df.style.set_caption("$$\\textbf{Testing Performance}$$")
