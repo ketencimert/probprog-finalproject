@@ -116,13 +116,13 @@ def evaluate_models(
                 "VB (Meanfield)",
                 "Glicko2 (Original)"
             ],
-            "binary cross entropy loss $$- \\dfrac{1}{n} \\sum y \times log(y_{pred}) \
+            "binary cross entropy loss $$- \\dfrac{1}{n} \\sum y \\times log(y_{pred}) \
             + (1-y) \times log(1 - y_{pred}) $$":
             [bce_MCMC, bce_MLE, bce_VB, bce_glicko],
-            "misclassification error $$1 - \\dfrac{1}{n} \\sum \text{I}\\{y = y_{pred}\\} \
+            "misclassification error $$1 - \\dfrac{1}{n} \\sum \\text{I}\\{y = y_{pred}\\} \
             $$": [mce_MCMC, mce_MLE, mce_VB, mce_glicko]
         }
-    ).round(decimals=3).df.set_index(" ")
+    ).round(decimals=3).set_index(" ")
     df = df.style.set_caption("$$\\textbf{Testing Performance}$$")
     return df
 
@@ -158,7 +158,7 @@ def plot_ppc(score_ppc, observed_data, check, dim):
     p_values = bayesian_p(score_ppc, observed_data, check, dim)
 
     for i in range(len(check)):
-        main_title = 'T = {} (p-value : {:.2f})'.format(
+        main_title = 'stats = {} (p-value : {:.2f})'.format(
             check[i], p_values[check[i]]
             )
 
