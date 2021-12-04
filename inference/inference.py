@@ -218,7 +218,8 @@ class Player:
         self._preRatingRD()
 
 
-def hmc(glicko_stan, observed_data, gamma_1=2, gamma_2=2):
+def hmc(glicko_stan, observed_data,
+        gammas=[(2, 2), (7, 8), (3, 6), (4, 9)]):
     """
     Function to conduct inference
     :param glicko_stan: Path to Stan model file
@@ -242,7 +243,7 @@ def hmc(glicko_stan, observed_data, gamma_1=2, gamma_2=2):
         posterior=glicko_mcmc,
     )
 
-    plot_trace(samples, gamma_1, gamma_2)
+    plot_trace(samples, gammas)
 
     score_ppc_mcmc = pp_hmc(samples, observed_data)
 

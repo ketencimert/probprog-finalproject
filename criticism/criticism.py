@@ -179,27 +179,42 @@ def plot_ppc(score_ppc, observed_data, check, dim):
     return None
 
 
-def plot_trace(samples, gamma_1, gamma_2):
+def plot_trace(samples,
+               gammas=[(2, 2), (7, 8), (3, 6), (4, 9)]
+               ):
     """
     Function to plot trace figures
     :param samples: Latent r.v. samples
-    :param gamma_1: Period index
-    :param gamma_2: Player index
+    :param gammas: A list of 4 latent params to plot
     returns None
     """
-    draws = np.asarray(samples.posterior['gamma'])[:, :, gamma_1, gamma_2]
-    iteration = list(range(draws.shape[1]))
-    chains = dict()
+    index = {0: (0, 0), 1: (0, 1), 2: (1, 0), 3: (1, 1)}
 
-    plt.figure(figsize=(10, 5))
+    fig, axes = plt.subplots(2, 2)
+    fig.set_size_inches(14, 7)
 
-    for i in range(draws.shape[0]):
-        chains[i] = draws[i, :]
+    for i in range(len(gammas)):
+        g1, g2 = gammas[i][0], gammas[i][1]
+        draws = np.asarray(samples.posterior['gamma'])[:, :, g1, g2]
+        iteration = list(range(draws.shape[1]))
+        x = index[i][0]
+        y = index[i][1]
+        chains = dict()
 
-    for key in chains.keys():
-        plt.plot(iteration, chains[key], label='Chain {}'.format(key))
+        for j in range(draws.shape[0]):
+            chains[j] = draws[j, :]
 
-    plt.legend()
+        for key in chains.keys():
+            axes[x][y].plot(
+                iteration,
+                chains[key],
+                label='Chain {}'.format(key),
+                alpha=0.7
+            )
+
+        axes[x][y].title.set_text('gamma[{},{}]'.format(g1, g2))
+
+        axes[x][y].legend(loc='upper right')
 
     return None
 
