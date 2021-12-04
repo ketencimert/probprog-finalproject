@@ -279,7 +279,17 @@ def meanfield_vi(glicko_stan, observed_data):
     return glicko_vi, score_ppc_vi
 
 
-def map_opt(glicko_stan, observed_data):
+def map_opt(
+    glicko_stan,
+    observed_data,
+    iter=2000,
+    tol_obj=1e-12,
+    tol_rel_obj=1e4,
+    tol_grad=1e-8,
+    tol_rel_grad=1e7,
+    tol_param=1e-8,
+    history_size=5
+):
     """
     Function to conduct inference
     :param glicko_stan: Path to Stan model file
@@ -292,13 +302,13 @@ def map_opt(glicko_stan, observed_data):
         refresh=100,
         algorithm="lbfgs",
         init_alpha=0.001,
-        iter=2000,
-        tol_obj=1e-12,
-        tol_rel_obj=1e4,
-        tol_grad=1e-8,
-        tol_rel_grad=1e7,
-        tol_param=1e-8,
-        history_size=5
+        iter=iter,
+        tol_obj=tol_obj,
+        tol_rel_obj=tol_rel_obj,
+        tol_grad=tol_grad,
+        tol_rel_grad=tol_rel_grad,
+        tol_param=tol_param,
+        history_size=history_size
     )
     plot_loglikelihood(glicko_map)
     score_ppc_map = pp_map(glicko_map, observed_data)
