@@ -260,7 +260,7 @@ def plot_loglikelihood(glicko_map):
         with open(fname, "r") as f:
             text = f.read()
 
-        with open('./inference/map_split.txt') as f:
+        with open('./criticism/map_split.txt') as f:
             split = str(f.read())
 
         len_splitted = len(text.split(split))
